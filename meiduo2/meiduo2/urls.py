@@ -1,4 +1,4 @@
-"""meiduo URL Configuration
+"""meiduo2 URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.11/topics/http/urls/
@@ -13,22 +13,9 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+from django.conf.urls import url
 from django.contrib import admin
-from django.http import HttpResponse
-import logging
-
-
-
-# def text(request):
-#     logger = logging.getLogger('django')
-#     logger.debug('测试logging模块debug')
-#     logger.info('测试logging模块info')
-#     logger.error('测试logging模块error')
-#     return HttpResponse('text')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    # url(r'^text/$',text)
-    url(r'^',include('apps.users.urls',namespace='users'))
 ]
