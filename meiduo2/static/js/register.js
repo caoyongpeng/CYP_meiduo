@@ -61,6 +61,18 @@ var vm = new Vue({
             var re = /^[a-zA-Z0-9_-]{5,20}$/;
             if (re.test(this.username)) {
                 this.error_name = false;
+                let url = 'http://www.meiduo.site:8000/usernames/'+this.username+'/';
+                axios.get(url).then(response=>{
+                    if (response.data.count == 1){
+                        this.error_name=true
+                        this.error_name_message='用户名已存在'
+                    }else {
+                        this.error_name=false
+                        this.error_name_message='用户名不能超过5,20个字符'
+                    }
+                }).catch(error=>{
+                    alert(error)
+                });
             } else {
                 this.error_name_message = '请输入5-20个字符的用户名';
                 this.error_name = true;
