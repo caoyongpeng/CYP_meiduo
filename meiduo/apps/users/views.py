@@ -6,9 +6,10 @@ from django.urls import reverse
 from django.views import View
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
-from django.contrib.auth import login
+from django.contrib.auth import login,logout
 from apps.users.models import User
-
+from django.contrib.auth import authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class RegisterView(View):
     def get(self,request):
@@ -45,4 +46,47 @@ class RegisterCountView(View):
         count=User.objects.filter(username=username).count()
         return JsonResponse({'count':count})
 
+class LoginView(View):
+    def get(self,request):
+        return render(request,'login.html')
+    def post(self,request):
+        username = request.POST.get('username')
+        password = request.POST.get('pwd')
+        remembered = request.POST.get('remembered')
+
+        if not all([username,password]):
+            return HttpResponseBadRequest('参数不全')
+        user = authenticate(username=username,password=password)
+
+        if user is None:
+            return HttpResponseBadRequest('用户名或密码错误')
+        login(request,user)
+
+        if remembered == 'on':
+            request.session.set_expiry(None)
+        else:
+            request.session.set_expiry(0)
+
+        response = redirect(reverse('contents:index'))
+
+        response.set_cookie('username',user.username,max_age=3600)
+
+        return response
+
+class LogoutView(View):
+    def get(self,request):
+        logout(request)
+
+        response = redirect(reverse('contents:index'))
+        response.delete_cookie('username')
+        return response
+
+class UserCenterInfoView(LoginRequiredMixin,View):
+    def get(self,request):
+        # if request.user.is_authenticated:
+        #     return render(request, 'user_center_info.html')
+        # else:
+        #     return redirect(reverse('users:login'))
+
+        return render(request,'user_center_info.html')
 

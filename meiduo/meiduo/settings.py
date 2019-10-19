@@ -195,3 +195,8 @@ LOGGING = {
 }
 
 AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = [
+    'utils.users.UsernameMobileModelBackend'
+]
+LOGIN_URL = '/login/'
