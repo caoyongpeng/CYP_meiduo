@@ -73,7 +73,7 @@ var vm = new Vue({
                     console.log(response.data.count)
                     if(response.data.count == 1){
                         this.error_name=true
-                        this.error_name_message='哥们,你别用大嫂的用户名'
+                        this.error_name_message='用户名重复'
                     }else {
                         this.error_name=false
                         this.error_name_message='用户名不能超过5,20个字符'
