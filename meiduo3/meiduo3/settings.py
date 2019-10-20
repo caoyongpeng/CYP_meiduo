@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.users',
     'apps.contents',
-    'apps.verifications'
+    'apps.verifications',
+    'apps.oauth'
 ]
 
 MIDDLEWARE = [
@@ -144,6 +145,13 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "code": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -191,3 +199,24 @@ LOGGING = {
 
 
 AUTH_USER_MODEL = 'users.User'
+AUTHENTICATION_BACKENDS = [
+    'utils.users.UsernameMobileModelBackend'
+]
+LOGIN_URL = '/login/'
+
+QQ_CLIENT_ID = '101518219'
+
+QQ_CLIENT_SECRET = '418d84ebdc7241efb79536886ae95224'
+
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8000/oauth_callback/'
+
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = 'qi_rui_hua@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = '123456abc'
