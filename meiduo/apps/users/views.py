@@ -1,3 +1,6 @@
+import json
+
+import re
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
@@ -10,6 +13,9 @@ from django.contrib.auth import login,logout
 from apps.users.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from utils.response_code import RETCODE
+
 
 class RegisterView(View):
     def get(self,request):
@@ -88,5 +94,47 @@ class UserCenterInfoView(LoginRequiredMixin,View):
         # else:
         #     return redirect(reverse('users:login'))
 
-        return render(request,'user_center_info.html')
+        context = {
+            'username': request.user.username,
+            'mobile': request.user.mobile,
+            'email': request.user.email,
+            'email_active': request.user.email_active,
+        }
 
+        return render(request,'user_center_info.html',context=context)
+
+class EmailView(View):
+    def put(self,request):
+        body = request.body
+        body_str = body.decode()
+        data = json.loads(body_str)
+        # ② 验证
+        email = data.get('email')
+        if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+            return JsonResponse({'code': RETCODE.PARAMERR, 'errmsg': '邮箱不符合规则'})
+        # ③ 更新数据
+        request.user.email = email
+        request.user.save()
+        # ④ 给邮箱发送激活连接
+        from django.core.mail import send_mail
+
+        # subject, message, from_email, recipient_list,
+        # subject        主题
+        subject = '美多商场激活邮件'
+        # message,       内容
+        message = ''
+        # from_email,  谁发的
+        from_email = '欢乐玩家<qi_rui_hua@163.com>'
+        # recipient_list,  收件人列表
+        recipient_list = ['qi_rui_hua@163.com']
+
+        html_mesage = "<a href='http://www.huyouni.com'>戳我有惊喜</a>"
+
+        send_mail(subject=subject,
+                  message=message,
+                  from_email=from_email,
+                  recipient_list=recipient_list,
+                  html_message=html_mesage)
+
+        # ⑤ 返回相应
+        return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
