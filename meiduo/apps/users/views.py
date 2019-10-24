@@ -13,6 +13,9 @@ from django.views import View
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.contrib.auth import login,logout
+from django_redis import get_redis_connection
+
+from apps.goods.models import SKU
 from apps.users.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -62,7 +65,7 @@ class LoginView(View):
         return render(request,'login.html')
     def post(self,request):
         username = request.POST.get('username')
-        password = request.POST.get('pwd')
+        password = request.POST.get('password')
         remembered = request.POST.get('remembered')
 
         if not all([username,password]):
@@ -208,3 +211,21 @@ class ChangePasswordView(LoginRequiredMixin, View):
         response.delete_cookie('username')
 
         return response
+class UserHistoryView(LoginRequiredMixin,View):
+    def post(self,request):
+        user = request.user
+        data = json.loads(request.body.decode())
+        sku_id = data.get('sku_id')
+        try:
+            sku = SKU.objects.get(id = sku_id)
+        except SKU.DoesNotExist:
+            return JsonResponse({'code': RETCODE.NODATAERR, 'errmsg': '没有此商品'})
+        redis_conn = get_redis_connection('history')
+
+        redis_conn.lrem('history_%s'%user.id,0,sku_id)
+
+        redis_conn.lpush('history_%s'%user.id,sku_id)
+
+        redis_conn.ltrim('history_%s'%user,0,4)
+
+        return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})

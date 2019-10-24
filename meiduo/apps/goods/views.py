@@ -4,7 +4,7 @@ from django.shortcuts import render
 # Create your views here.
 from django.views import View
 
-from apps.goods.models import GoodsCategory, SKU
+from apps.goods.models import GoodsCategory, SKU,GoodsVisitCount
 from apps.goods.utils import get_breadcrumb
 
 
@@ -150,3 +150,27 @@ class DetailView(View):
         }
 
         return render(request,'detail.html',context)
+class VisitCountView(View):
+    def post(self,request,category_id):
+        try:
+            category = GoodsCategory.objects.get(id=category_id)
+        except GoodsCategory.DoesNotExist:
+            return JsonResponse({'code':RETCODE.NODATAERR,'errmsg':'没有此分类'})
+        from django.utils import timezone
+
+        today = timezone.localdate()
+        try:
+            vc = GoodsVisitCount.objects.get(category=category,date=today)
+        except GoodsVisitCount.DoesNotExist:
+            GoodsVisitCount.objects.create(
+                category=category,
+                date=today,
+                count=1
+            )
+            return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})
+        else:
+            vc.count+=1
+            vc.save()
+            return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
+
+

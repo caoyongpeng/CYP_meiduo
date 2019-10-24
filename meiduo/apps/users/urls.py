@@ -12,5 +12,6 @@ urlpatterns = [
     url(r'^emailsactive/$', views.EmailActiveView.as_view(), name='emailactive'),
     url(r'^site/$', views.UserCenterSiteView.as_view(), name='site'),
     url(r'^pwd/$', views.ChangePasswordView.as_view(), name='pwd'),
+    url(r'^browse_histories/$', views.UserHistoryView.as_view(), name='history'),
 
 ]
