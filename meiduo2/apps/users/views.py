@@ -115,11 +115,11 @@ class EmailView(LoginRequiredMixin,View):
 
         message=''
 
-        from_email = '欢乐玩家<qi_rui_hua@163.com>'
+        from_email = '欢乐玩家<13464604691@163.com>'
 
-        recipient_list = ['qi_rui_hua@163.com']
+        recipient_list = [email]
 
-        html_mesage="<a href='http://www.huyouni.com'>戳我有惊喜</a>"
+        html_mesage="<a href='http://www.meiduo.site:8000/emailsactive/?id=%s&email=%s'>戳我有惊喜</a>"%(request.user.id,email)
 
         send_mail(subject=subject,
                   message=message,
@@ -128,3 +128,25 @@ class EmailView(LoginRequiredMixin,View):
                   html_message=html_mesage)
 
         return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})
+
+class EmailActiveView(View):
+    def get(self,request):
+
+
+        id = request.GET.get('id')
+        email = request.GET.get('email')
+
+        user = User.objects.get(id = id,email = email)
+
+        if user is None:
+            return HttpResponseBadRequest('验证失败')
+        user.email_active = True
+        user.save()
+
+        return redirect(reverse('users:center'))
+
+class UserCenterSiteView(View):
+
+    def get(self,request):
+
+        return render(request,'user_center_site.html')

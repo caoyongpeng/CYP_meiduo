@@ -1,7 +1,10 @@
 import json
 
 import re
+
+from django.http import HttpResponseForbidden
 from django.http import JsonResponse
+from django.middleware import http
 from django.shortcuts import render, redirect
 
 # Create your views here.
@@ -14,6 +17,8 @@ from apps.users.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from apps.users.utils import check_active_token
+from celery_tasks.email.tasks import send_active_email
 from utils.response_code import RETCODE
 
 
@@ -42,11 +47,11 @@ class RegisterView(View):
 
         user = User.objects.create_user(username=username,password=password,mobile=mobile)
 
-        login(request,user)
+        login(request, user)
 
-
-        return redirect(reverse('contents:index'))
-        return HttpResponse('OK')
+        response = redirect(reverse('contents:index'))
+        response.set_cookie('username', user.username, max_age=3600)
+        return response
 class RegisterCountView(View):
     def get(self,request,username):
         count=User.objects.filter(username=username).count()
@@ -116,25 +121,90 @@ class EmailView(View):
         request.user.email = email
         request.user.save()
         # ④ 给邮箱发送激活连接
-        from django.core.mail import send_mail
+        # from django.core.mail import send_mail
+        #
+        # # subject, message, from_email, recipient_list,
+        # # subject        主题
+        # subject = '美多商场激活邮件'
+        # # message,       内容
+        # message = ''
+        # # from_email,  谁发的
+        # from_email = '欢乐玩家<qi_rui_hua@163.com>'
+        # # recipient_list,  收件人列表
+        # recipient_list = ['qi_rui_hua@163.com']
+        #
+        # html_mesage = "<a href='http://www.huyouni.com'>戳我有惊喜</a>"
+        #
+        # send_mail(subject=subject,
+        #           message=message,
+        #           from_email=from_email,
+        #           recipient_list=recipient_list,
+        #           html_message=html_mesage)
 
-        # subject, message, from_email, recipient_list,
-        # subject        主题
-        subject = '美多商场激活邮件'
-        # message,       内容
-        message = ''
-        # from_email,  谁发的
-        from_email = '欢乐玩家<qi_rui_hua@163.com>'
-        # recipient_list,  收件人列表
-        recipient_list = ['qi_rui_hua@163.com']
-
-        html_mesage = "<a href='http://www.huyouni.com'>戳我有惊喜</a>"
-
-        send_mail(subject=subject,
-                  message=message,
-                  from_email=from_email,
-                  recipient_list=recipient_list,
-                  html_message=html_mesage)
-
+        send_active_email.delay(request.user.id,email)
         # ⑤ 返回相应
         return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
+
+class EmailActiveView(View):
+    def get(self,request):
+        token = request.GET.get('token')
+        if token is None:
+            return HttpResponseBadRequest('缺少参数')
+        data = check_active_token(token)
+        if data is None:
+            return HttpResponseBadRequest('验证失败')
+        id = data.get('id')
+        email = data.get('email')
+        try:
+            user = User.objects.get(id=id,email=email)
+        except User.DoesNotExist:
+            return HttpResponseBadRequest('验证失败')
+        else:
+            user.email_active = True
+            user.save()
+        return redirect(reverse('users:center'))
+class UserCenterSiteView(View):
+
+    def get(self,request):
+
+        return render(request,'user_center_site.html')
+
+class ChangePasswordView(LoginRequiredMixin, View):
+
+    def get(self, request):
+
+        return render(request, 'user_center_pass.html')
+
+    def post(self, request):
+
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        new_password2 = request.POST.get('new_password2')
+
+        if not all([old_password, new_password, new_password2]):
+            return HttpResponseForbidden('缺少必传参数')
+        if not re.match(r'^[0-9A-Za-z]{8,20}$', new_password):
+            return HttpResponseBadRequest('密码最少8位，最长20位')
+        if new_password != new_password2:
+            return HttpResponseBadRequest('两次输入的密码不一致')
+
+        if not request.user.check_password(old_password):
+            return render(request, 'user_center_pass.html', {'origin_password_errmsg':'原始密码错误'})
+
+        try:
+            request.user.set_password(new_password)
+            request.user.save()
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('django')
+            logger.error(e)
+            return render(request, 'user_center_pass.html', {'change_password_errmsg': '修改密码失败'})
+
+        logout(request)
+
+        response = redirect(reverse('users:login'))
+
+        response.delete_cookie('username')
+
+        return response

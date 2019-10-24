@@ -35,9 +35,9 @@ var vm = new Vue({
         // 获取省份数据
         this.get_provinces();
         // 将用户地址列表绑定到变量, addresses 是django模板传给vue的json字符串
-        // this.addresses = JSON.parse(JSON.stringify(addresses));
+        this.addresses = JSON.parse(JSON.stringify(addresses));
         // 默认地址id
-        // this.default_address_id = default_address_id;
+        this.default_address_id = default_address_id;
     },
     watch: {
         // 监听到省份id变化
@@ -92,7 +92,8 @@ var vm = new Vue({
             })
                 .then(response => {
                     if (response.data.code == '0') {
-                        this.provinces = response.data.province_list;
+
+                        this.provinces = response.data.provience_list;
                     } else {
                         console.log(response.data);
                         this.provinces = [];
@@ -129,6 +130,7 @@ var vm = new Vue({
             if (this.form_address.tel) {
                 var re = /^(0[0-9]{2,3}-)?([2-9][0-9]{6,7})+(-[0-9]{1,4})?$/;
                 if (re.test(this.form_address.tel)) {
+                    this.error_tel = false;
                     this.error_tel = false;
                 } else {
                     this.error_tel = true;
