@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'apps.contents',
     'apps.oauth',
     'apps.areas',
-    'apps.goods'
+    'apps.goods',
+    'apps.carts'
 ]
 
 MIDDLEWARE = [
@@ -155,6 +156,13 @@ CACHES = {
     "history": { # session
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": "redis://127.0.0.1:6379/3",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        },
+    "carts": { # session
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://127.0.0.1:6379/4",
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
             }
