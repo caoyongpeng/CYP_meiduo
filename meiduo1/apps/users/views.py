@@ -8,6 +8,9 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse,HttpResponseBadRequest
 from django.urls import reverse
 from django.views import View
+from django_redis import get_redis_connection
+
+from apps.goods.models import SKU
 from apps.users.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth import login,logout
@@ -59,7 +62,7 @@ class LoginView(View):
         return render(request,'login.html')
     def post(self,request):
         username = request.POST.get('username')
-        password = request.POST.get('pwd')
+        password = request.POST.get('password')
         remembered = request.POST.get('remembered')
 
         if not all([username,password]):
@@ -168,3 +171,61 @@ class UserCenterSiteView(View):
     def get(self,request):
 
         return render(request,'user_center_site.html')
+
+class ChangePasswordView(LoginRequiredMixin, View):
+
+    def get(self, request):
+
+        return render(request, 'user_center_pass.html')
+
+    def post(self, request):
+
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        new_password2 = request.POST.get('new_password2')
+
+        if not all([old_password, new_password, new_password2]):
+            return HttpResponseBadRequest('缺少必传参数')
+        if not re.match(r'^[0-9A-Za-z]{8,20}$', new_password):
+            return HttpResponseBadRequest('密码最少8位，最长20位')
+        if new_password != new_password2:
+            return HttpResponseBadRequest('两次输入的密码不一致')
+
+        if not request.user.check_password(old_password):
+            return render(request, 'user_center_pass.html', {'origin_password_errmsg':'原始密码错误'})
+
+        try:
+            request.user.set_password(new_password)
+            request.user.save()
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('django')
+            logger.error(e)
+            return render(request, 'user_center_pass.html', {'change_password_errmsg': '修改密码失败'})
+
+        logout(request)
+
+        response = redirect(reverse('users:login'))
+
+        response.delete_cookie('username')
+
+        return response
+class UserHistoryView(LoginRequiredMixin,View):
+    def post(self,request):
+        user = request.user
+        data = json.loads(request.body.decode())
+        sku_id = data.get('sku_id')
+        try:
+            sku = SKU.objects.get(id = sku_id)
+        except SKU.DoesNotExist:
+            return JsonResponse({'code': RETCODE.NODATAERR, 'errmsg': '没有此商品'})
+        redis_conn = get_redis_connection('history')
+
+        redis_conn.lrem('history_%s'%user.id,0,sku_id)
+
+        redis_conn.lpush('history_%s'%user.id,sku_id)
+
+        redis_conn.ltrim('history_%s'%user,0,4)
+
+        return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})

@@ -16,7 +16,7 @@ let vm = new Vue({
 		error_image_code_message: '',
 		error_sms_code_message: '',
 		error_password_message:'',
-		
+
 		uuid: '',
 		image_code_url: '',
 		sms_code_tip: '获取短信验证码',

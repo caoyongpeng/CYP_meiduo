@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'apps.verifications',
     'apps.oauth',
     'apps.areas',
-    'apps.goods'
+    'apps.goods',
+    'apps.carts'
 ]
 
 MIDDLEWARE = [
@@ -153,6 +154,13 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "history": { # session
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -220,3 +228,6 @@ EMAIL_PORT = 25
 EMAIL_HOST_USER = '13464604691@163.com'
 #在邮箱中设置的客户端授权密码
 EMAIL_HOST_PASSWORD = '592159LYly'
+
+
+DEFAULT_FILE_STORAGE = 'utils.storage.MyStorage'
