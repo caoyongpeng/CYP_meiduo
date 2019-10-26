@@ -13,5 +13,7 @@ urlpatterns = [
     url(r'^site/$', views.UserCenterSiteView.as_view(), name='site'),
     url(r'^pwd/$', views.ChangePasswordView.as_view(), name='pwd'),
     url(r'^browse_histories/$', views.UserHistoryView.as_view(), name='history'),
+    url(r'^addresses/$',views.AddressView.as_view(),name='showaddress'),
+    url(r'^addresses/(?P<address_id>\d+)/$',views.AddressUpdateView.as_view(),name='updateaddress'),
 
 ]

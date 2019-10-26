@@ -49,7 +49,7 @@ var vm = new Vue({
                 })
                     .then(response => {
                         if (response.data.code == '0') {
-                            this.cities = response.data.sub_data.subs;
+                            this.cities = response.data.subs;
                         } else {
                             console.log(response.data);
                             this.cities = [];
@@ -70,7 +70,7 @@ var vm = new Vue({
                 })
                     .then(response => {
                         if (response.data.code == '0') {
-                            this.districts = response.data.sub_data.subs;
+                            this.districts = response.data.subs;
                         } else {
                             console.log(response.data);
                             this.districts = [];
@@ -93,7 +93,7 @@ var vm = new Vue({
                 .then(response => {
                     if (response.data.code == '0') {
 
-                        this.provinces = response.data.provience_list;
+                        this.provinces = response.data.province_list;
                     } else {
                         console.log(response.data);
                         this.provinces = [];
@@ -200,7 +200,7 @@ var vm = new Vue({
                 // 注意：0 == '';返回true; 0 === '';返回false;
                 if (this.editing_address_index === '') {
                     // 新增地址
-                    var url = this.host + '/addresses/create/';
+                    var url = this.host + '/addresses/';
                     axios.post(url, this.form_address, {
                         headers: {
                             'X-CSRFToken': getCookie('csrftoken')
