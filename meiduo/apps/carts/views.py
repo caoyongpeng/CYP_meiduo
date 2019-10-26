@@ -197,5 +197,37 @@ class CartsView(View):
             response.set_cookie('carts', cookie_data, max_age=7 * 24 * 3600)
 
             return response
+class CartsSelectAllView(View):
+    def put(self,request):
+        data = json.loads(request.body.decode())
+        selected = data.get('selected')
 
+        user = request.user
+
+        if user is not None and user.is_authenticated:
+            redis_conn = get_redis_connection('carts')
+
+            cart = redis_conn.hgetall('carts_%s'%user.id)
+            sku_id_list = cart.keys()
+
+            if selected:
+                # 全选
+                redis_conn.sadd('selected_%s' % user.id, *sku_id_list)
+            else:
+                # 取消全选
+                redis_conn.srem('selected_%s' % user.id, *sku_id_list)
+            return JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
+        else:
+
+            carts = request.COOKIES.get('carts')
+
+            if carts is not None:
+                carts = pickle.loads(base64.b64decode(carts))
+                for sku_id in carts:
+                    carts[sku_id]['selected'] = selected
+            cookie_cart = base64.b64encode(pickle.dumps(carts))
+
+            response = JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
+            response.set_cookie('carts', cookie_cart, max_age=3600 * 24)
+            return response
 
