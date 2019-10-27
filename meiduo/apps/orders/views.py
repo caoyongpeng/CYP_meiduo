@@ -127,7 +127,7 @@ class OrderCommitView(LoginRequiredMixin,View):
 
                 for sku_id,count in selected_dict.items():
                     sku = SKU.objects.get(id=sku_id)
-                    
+
                     if sku.stock < count:
 
                         transaction.savepoint_rollback(savepoint)

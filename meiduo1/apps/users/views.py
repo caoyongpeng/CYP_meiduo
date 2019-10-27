@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.views import View
 from django_redis import get_redis_connection
 
+from apps.carts.utils import merge_cart_cookie_to_redis
 from apps.goods.models import SKU
 from apps.users.models import User, Address
 from django.contrib.auth import authenticate
@@ -82,6 +83,7 @@ class LoginView(View):
 
         response = redirect(reverse('contents:index'))
         response.set_cookie('username',user.username,max_age=3600)
+        response = merge_cart_cookie_to_redis(request,user,response)
         return response
 class LogoutView(View):
     def get(self,request):
