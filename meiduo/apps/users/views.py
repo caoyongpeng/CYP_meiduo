@@ -86,7 +86,7 @@ class LoginView(View):
         response = redirect(reverse('contents:index'))
 
         response.set_cookie('username',user.username,max_age=3600)
-        merge_cart_cookie_to_redis(request, user, response)
+        response = merge_cart_cookie_to_redis(request, user, response)
 
         return response
 

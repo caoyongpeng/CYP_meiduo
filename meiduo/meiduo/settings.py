@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'apps.oauth',
     'apps.areas',
     'apps.goods',
-    'apps.carts'
+    'apps.carts',
+    'apps.orders'
 ]
 
 MIDDLEWARE = [
