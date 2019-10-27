@@ -15,6 +15,7 @@ from django.http import HttpResponseBadRequest
 from django.contrib.auth import login,logout
 from django_redis import get_redis_connection
 
+from apps.carts.utils import merge_cart_cookie_to_redis
 from apps.goods.models import SKU
 from apps.users.models import User, Address
 from django.contrib.auth import authenticate
@@ -85,6 +86,7 @@ class LoginView(View):
         response = redirect(reverse('contents:index'))
 
         response.set_cookie('username',user.username,max_age=3600)
+        merge_cart_cookie_to_redis(request, user, response)
 
         return response
 
