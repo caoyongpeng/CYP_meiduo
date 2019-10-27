@@ -2,7 +2,8 @@ import json
 
 from django.http import JsonResponse
 from django.shortcuts import render
-
+import pickle
+import base64
 # Create your views here.
 from django.views import View
 from django_redis import get_redis_connection
@@ -34,8 +35,235 @@ class CartsView(View):
         if user.is_authenticated:
             redis_conn = get_redis_connection('carts')
 
-            redis_conn.hset('cart_%s'%user.id,sku_id,count)
+            pl = redis_conn.pipeline()
 
-            redis_conn.sadd('selected_%s'%user.id,sku_id)
+            pl.hincrby('cart_%s'%user.id,sku_id,count)
+
+            pl.sadd('selected_%s'%user.id,sku_id)
+
+            pl.execute()
 
             return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})
+        else:
+            carts_str = request.COOKIES.get('carts')
+
+            if carts_str is None:
+
+                cookie_data = {
+                    sku_id:{'count':count,'selected':selected}
+                }
+            else:
+
+                cookie_data = pickle.loads(base64.b64decode(carts_str))
+
+                if sku_id in cookie_data:
+                    origin_count = cookie_data[sku_id]['count']
+
+                    count +=origin_count
+
+                    cookie_data[sku_id] = {'count':count,'selected':True}
+                else:
+
+                    cookie_data[sku_id] = {'count':count,'selected':True}
+
+        cookie_str = base64.b64encode(pickle.dumps(cookie_data))
+
+        response = JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
+
+        response.set_cookie('carts', cookie_str, max_age=7 * 24 * 3600)
+
+        return response
+
+    def get(self,request):
+        user = request.user
+
+        if user.is_authenticated:
+            redis_conn = get_redis_connection('carts')
+
+            id_counts = redis_conn.hgetall('carts_%s'%user.id)
+
+            selected_ids = redis_conn.smembers('selected_%s'%user.id)
+
+            cookie_dict = {}
+
+            for sku_id,count in id_counts.items():
+                cookie_dict[int(sku_id)] = {
+                    'count':int(count),
+                    'selected':sku_id in selected_ids
+                }
+        else:
+
+            cookie_data = request.COOKIES.get('carts')
+
+            if cookie_data is not None:
+
+                cookie_dict = pickle.loads(base64.b64decode(cookie_data))
+
+            else:
+
+                cookie_dict = {}
+
+        ids = cookie_dict.keys()
+
+        carts_list = []
+
+        for id in ids:
+            sku = SKU.objects.get(id=id)
+            carts_list.append({
+                'id': sku.id,
+                'name': sku.name,
+                'count': cookie_dict.get(sku.id).get('count'),
+                'selected': str(cookie_dict.get(sku.id).get('selected')),  # 将True，转'True'，方便json解析
+                'default_image_url': sku.default_image.url,
+                'price': str(sku.price),  # 从Decimal('10.2')中取出'10.2'，方便json解析
+                'amount': str(sku.price * cookie_dict.get(sku.id).get('count')),
+            })
+        return render(request, 'cart.html', context={'cart_skus': carts_list})
+
+    def put(self,request):
+
+        data = json.loads(request.body.decode())
+
+        sku_id = data.get('sku_id')
+
+        count = data.get('count')
+
+        selected = data.get('selected')
+
+        try:
+            sku = SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return JsonResponse({'code':RETCODE.NODATAERR,'errmsg':'没有此信息'})
+
+        user = request.user
+
+        if user.is_authenticated:
+
+            redis_conn = get_redis_connection('carts')
+
+            redis_conn.hset('carts_%s'%user.id,sku_id,count)
+
+            if selected:
+
+                redis_conn.sadd('selected_%s'%user.id,sku_id)
+
+            else:
+
+                redis_conn.srem('selected_%s'%user.id,sku_id)
+
+            data = {
+                'count': count,
+                'id': sku_id,
+                'selected': selected,
+                'name': sku.name,
+                'default_image_url': sku.default_image.url,
+                'price': sku.price,
+                'amount': sku.price * count,
+            }
+            return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'cart_sku': data})
+        else:
+
+            cookie_str = request.COOKIES.get('carts')
+
+            if cookie_str is not None:
+                cookie_dict = pickle.loads(base64.b64decode(cookie_str))
+
+            else:
+                cookie_dict = {}
+
+            if sku_id in cookie_dict:
+                cookie_dict[sku_id] = {
+                    'count':count,
+                    'selected':selected
+                }
+            cookie_data = base64.b64encode(pickle.dumps(cookie_dict))
+
+            data = {
+                'count': count,
+                'id': sku_id,
+                'selected': selected,
+                'name': sku.name,
+                'default_image_url': sku.default_image.url,
+                'price': sku.price,
+                'amount': sku.price * count,
+            }
+            response = JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'cart_sku': data})
+            response.set_cookie('carts', cookie_data, max_age=7 * 24 * 3600)
+            return response
+
+    def delete(self,request):
+
+        data = json.loads(request.body.decode())
+
+        sku_id = data.get('sku_id')
+
+        try:
+            sku = SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+
+            return JsonResponse({'code':RETCODE.NODATAERR,'errmsg':'没有此数据'})
+
+        user = request.user
+
+        if user.is_authenticated:
+
+            redis_conn = get_redis_connection('carts')
+
+            redis_conn.hdel('carts_%s'%user.id,sku_id)
+
+            redis_conn.srem('selected_%s' % user.id, sku_id)
+
+            return JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
+        else:
+
+            cookie_str = request.COOKIES.get('carts')
+
+            if cookie_str is not None:
+
+                cookie_dict = pickle.loads(base64.b64decode(cookie_str))
+
+            else:
+
+                cookie_dict = {}
+
+            if sku_id in cookie_dict:
+                del cookie_dict[sku_id]
+            cookie_data = base64.b64encode(pickle.dumps(cookie_dict))
+            response = JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok'})
+            response.set_cookie('carts', cookie_data, max_age=7 * 24 * 3600)
+
+            return response
+
+class CartsSelectAllView(View):
+    def put(self,request):
+        data = json.loads(request.body.decode())
+        selected = data.get('selected')
+
+        user = request.user
+
+        if user is not None and user.is_authenticated:
+            redis_conn = get_redis_connection('carts')
+
+            cart = redis_conn.hgetall('carts_%s'%user.id)
+            sku_id_list = cart.keys()
+
+            if selected:
+                # 全选
+                redis_conn.sadd('selected_%s' % user.id, *sku_id_list)
+            else:
+                # 取消全选
+                redis_conn.srem('selected_%s' % user.id, *sku_id_list)
+            return JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
+        else:
+
+            carts = request.COOKIES.get('carts')
+
+            if carts is not None:
+                carts = pickle.loads(base64.b64decode(carts))
+                for sku_id in carts:
+                    carts[sku_id]['selected'] = selected
+            cookie_cart = base64.b64encode(pickle.dumps(carts))
+
+            response = JsonResponse({'code': RETCODE.OK, 'errmsg': '全选购物车成功'})
+            response.set_cookie('carts', cookie_cart, max_age=3600 * 24)
+            return response
