@@ -37,7 +37,7 @@ class CartsView(View):
 
             pl = redis_conn.pipeline()
 
-            pl.hincrby('cart_%s'%user.id,sku_id,count)
+            pl.hincrby('carts_%s'%user.id,sku_id,count)
 
             pl.sadd('selected_%s'%user.id,sku_id)
 

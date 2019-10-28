@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'apps.areas',
     'apps.goods',
     'apps.carts',
-    'apps.orders'
+    'apps.orders',
+    'apps.payment'
 ]
 
 MIDDLEWARE = [
@@ -239,3 +240,12 @@ EMAIL_HOST_PASSWORD = '592159LYly'
 
 
 DEFAULT_FILE_STORAGE = 'utils.storage.MyStorage'
+
+
+
+ALIPAY_APPID = '2016091600523030'
+ALIPAY_DEBUG = True
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
+ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'
+APP_PRIVATE_KEY_PATH = os.path.join(BASE_DIR, 'apps/payment/keys/app_private_key.pem')
+ALIPAY_PUBLIC_KEY_PATH = os.path.join(BASE_DIR, 'apps/payment/keys/alipay_public_key.pem')

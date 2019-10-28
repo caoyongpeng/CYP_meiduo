@@ -170,6 +170,8 @@ class OrderCommitView(LoginRequiredMixin,View):
 
                 transaction.savepoint_commit(savepoint)
 
+
+
         return JsonResponse({'code':RETCODE.OK,'errmsg':'ok',
                              'order_id':order_info.order_id,
                              'payment_amount':order_info.total_amount,

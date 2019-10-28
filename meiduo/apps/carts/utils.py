@@ -40,7 +40,7 @@ def merge_cart_cookie_to_redis(request, user, response):
             else:
 
                 remove_selected_ids.append(sku_id)
-        redis_conn.mset('carts_%s'%user.id,cookie_dict)
+        redis_conn.hmset('carts_%s'%user.id,cookie_dict)
 
         # redis_conn = get_redis_connection('carts')
         #
