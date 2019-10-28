@@ -126,38 +126,42 @@ class OrderCommitView(LoginRequiredMixin,View):
                     selected_dict[int(id)] = int(id_counts[id])
 
                 for sku_id,count in selected_dict.items():
-                    sku = SKU.objects.get(id=sku_id)
+                    while True:
+                        sku = SKU.objects.get(id=sku_id)
 
-                    if sku.stock < count:
+                        if sku.stock < count:
 
-                        transaction.savepoint_rollback(savepoint)
+                            transaction.savepoint_rollback(savepoint)
 
-                        return JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
-                    import time
-                    time.sleep(7)
+                            return JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
+                        # import time
+                        # time.sleep(7)
 
-                    old_stock = sku.stock
+                        old_stock = sku.stock
 
-                    new_stock = sku.stock-count
+                        new_stock = sku.stock-count
 
-                    new_sales = sku.sales+count
+                        new_sales = sku.sales+count
 
-                    rect = SKU.objects.filter(id=sku_id,stock=old_stock).update(stock=new_stock,sales=new_sales)
+                        rect = SKU.objects.filter(id=sku_id,stock=old_stock).update(stock=new_stock,sales=new_sales)
 
-                    if rect == 0:
-                        transaction.savepoint_rollback(savepoint)
+                        if rect == 0:
+                            continue
+                            # transaction.savepoint_rollback(savepoint)
+                            #
+                            # return JsonResponse({'code':RETCODE.STOCKERR,'errmsg':'下单失败'})
 
-                        return JsonResponse({'code':RETCODE.STOCKERR,'errmsg':'下单失败'})
+                        OrderGoods.objects.create(
 
-                    OrderGoods.objects.create(
+                            order = order_info,
+                            sku = sku,
+                            count = count,
+                            price = sku.price
+                        )
+                        order_info.total_count+=count
+                        order_info.total_amount+=(count*sku.price)
 
-                        order = order_info,
-                        sku = sku,
-                        count = count,
-                        price = sku.price
-                    )
-                    order_info.total_count+=count
-                    order_info.total_amount+=(count*sku.price)
+                        break
                 order_info.save()
             except Exception as e:
                 transaction.savepoint_rollback(savepoint)
@@ -166,4 +170,23 @@ class OrderCommitView(LoginRequiredMixin,View):
 
                 transaction.savepoint_commit(savepoint)
 
-        return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})
+        return JsonResponse({'code':RETCODE.OK,'errmsg':'ok',
+                             'order_id':order_info.order_id,
+                             'payment_amount':order_info.total_amount,
+                             'pay_method':order_info.pay_method})
+
+class OrderSuccessView(View):
+    def get(self,request):
+
+        order_id = request.GET.get('order_id')
+
+        pay_method = request.GET.get('pay_method')
+
+        payment_amount = request.GET.get('payment_amount')
+
+        context = {
+            'order_id': order_id,
+            'payment_amount': payment_amount,
+            'pay_method': pay_method
+        }
+        return render(request,'order_success.html',context=context)
