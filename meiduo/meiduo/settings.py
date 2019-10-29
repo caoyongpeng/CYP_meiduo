@@ -44,7 +44,13 @@ INSTALLED_APPS = [
     'apps.goods',
     'apps.carts',
     'apps.orders',
-    'apps.payment'
+    'apps.payment',
+    'django_crontab',
+]
+
+CRONJOBS = [
+    # 每1分钟生成一次首页静态文件
+    ('*/1 * * * *', 'apps.contents.crons.generate_static_index_html', '>> ' + os.path.join(BASE_DIR, 'logs/crontab.log'))
 ]
 
 MIDDLEWARE = [
@@ -91,7 +97,16 @@ DATABASES = {
         'PASSWORD': 'mysql', # 数据库用户密码
         'NAME': 'meiduo' # 数据库名字
     },
+    'slave': {
+        'ENGINE': 'django.db.backends.mysql', # 数据库引擎
+        'HOST': '127.0.0.1', # 数据库主机
+        'PORT': 8306, # 数据库端口
+        'USER': 'root', # 数据库用户名
+        'PASSWORD': 'mysql', # 数据库用户密码
+        'NAME': 'meiduo' # 数据库名字
+    },
 }
+DATABASE_ROUTERS = ['utils.db_router.MasterSlaveDBRouter']
 
 
 # Password validation
