@@ -406,3 +406,36 @@ class UserHistoryView(LoginRequiredMixin,View):
         redis_conn.ltrim('history_%s'%user,0,4)
 
         return JsonResponse({'code':RETCODE.OK,'errmsg':'ok'})
+
+class FindPwdView(View):
+    def get(self,request):
+        return render(request,'find_password.html')
+
+class ChangePwdView(View):
+    def post(self,request,user_id):
+        data = request.body.decode()
+        data_dict = json.loads(data)
+        password = data_dict.get('password')
+        password2 = data_dict.get('password2')
+        access_token = data_dict.get('access_token')
+
+        if not all([access_token,password,password2]):
+            return HttpResponseForbidden('数据不全')
+        if password != password2:
+            return HttpResponseForbidden('密码不一致')
+        user_dict = json.loads(access_token)
+
+        if user_dict is None:
+            return JsonResponse({},status=400)
+        if int(user_id) != user_dict['user_id']:
+            return JsonResponse({},status=400)
+
+        try:
+            user = User.objects.get(id=user_id)
+
+        except:
+            return JsonResponse({},status=400)
+
+        user.set_password(password)
+        user.save()
+        return JsonResponse({})

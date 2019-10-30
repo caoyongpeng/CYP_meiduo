@@ -10,22 +10,24 @@
 	<script type="text/javascript" src="../static/js/vue-2.5.16.js"></script>
     <script type="text/javascript" src="../static/js/axios-0.18.0.min.js"></script>
     <script type="text/javascript">
-        let username='{{ username }}';
-        let email='{{ email }}';
-        let mobile='{{ mobile }}';
-        let email_active='{{ email_active }}';
+         let username = "{{ username }}";
+    let mobile = "{{ mobile }}";
+    let email = "{{ email }}";
+    let email_active = "{{ email_active }}";
+
     </script>
 </head>
 <body>
 	<div id="app" v-cloak>
 	<div class="header_con">
 		<div class="header">
+            {{ csrf_input }}
 			<div class="welcome fl">欢迎来到美多商城!</div>
 			<div class="fr">
-				<div class="login_info fl" v-if="username">
-					欢迎您：<em>[[username]]</em>
+				<div class="login_info fl">
+					欢迎您：<em>张 山</em>
 				</div>
-				<div class="login_btn fl" v-else>
+				<div class="login_btn fl">
 					<a href="login.html">登录</a>
 					<span>|</span>
 					<a href="register.html">注册</a>
@@ -65,36 +67,36 @@
 				<li><a href="user_center_info.html" class="active">· 个人信息</a></li>
 				<li><a href="../static/user_center_order.html">· 全部订单</a></li>
 				<li><a href="{{ url('users:site') }}">· 收货地址</a></li>
-				<li><a href="{{ url('users:pwd') }}">· 修改密码</a></li>
+				<li><a href="../static/user_center_pass.html">· 修改密码</a></li>
 			</ul>
 		</div>
 		<div class="right_content clearfix">
 				<div class="info_con clearfix" v-cloak>
-                    <h3 class="common_title2">基本信息</h3>
-                    <ul class="user_info_list">
-                        <li><span>用户名：</span>[[ username ]]</li>
-                        <li><span>联系方式：</span>[[ mobile ]]</li>
-                        <li>
-                            <span>Email：</span>
-                            <div v-if="set_email">
-                                <input v-model="email" @blur="check_email" type="email" name="email" class="email">
-                                <input @click="save_email" type="button" name="" value="保 存">
-                                <input @click="cancel_email" type="reset" name="" value="取 消">
-                                <div v-show="error_email" class="error_email_tip">邮箱格式错误</div>
-                            </div>
-                            <div v-else>
-                                <input v-model="email" type="email" name="email" class="email" readonly>
-                                <div v-if="email_active">
-                                    已验证
-                                </div>
-                                <div v-else>
-                                    待验证<input @click="save_email" :disabled="send_email_btn_disabled" type="button" :value="send_email_tip">
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+    <h3 class="common_title2">基本信息</h3>
+    <ul class="user_info_list">
+        <li><span>用户名：</span>[[ username ]]</li>
+        <li><span>联系方式：</span>[[ mobile ]]</li>
+        <li>
+            <span>Email：</span>
+            <div v-if="set_email">
+                <input v-model="email" @blur="check_email" type="email" name="email" class="email">
+                <input @click="save_email" type="button" name="" value="保 存">
+                <input @click="cancel_email" type="reset" name="" value="取 消">
+                <div v-show="error_email" class="error_email_tip">邮箱格式错误</div>
+            </div>
+            <div v-else>
+                <input v-model="email" type="email" name="email" class="email" readonly>
+                <div v-if="email_active">
+                    已验证
                 </div>
-
+                <div v-else>
+                    待验证<input @click="save_email" :disabled="send_email_btn_disabled" type="button" :value="send_email_tip">
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+				
 				<h3 class="common_title2">最近浏览</h3>
 				<div class="has_view_list">
 					<ul class="goods_type_list clearfix">
@@ -166,8 +168,6 @@
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
 	</div>
-	<script type="text/javascript" src="../static/js/host.js"></script>
-	<script type="text/javascript" src="../static/js/common.js"></script>
 	<script type="text/javascript" src="../static/js/user_center_info.js"></script>
 </body>
 </html>

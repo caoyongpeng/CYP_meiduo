@@ -17,4 +17,9 @@ urlpatterns = [
     url(r'^emails/$', views.EmailView.as_view(), name='email'),
     url(r'^emailsactive/$', views.EmailActiveView.as_view(), name='emailactive'),
     url(r'^site/$', views.UserCenterSiteView.as_view(), name='site'),
+    url(r'^pwd/$', views.ChangePasswordView.as_view(), name='pwd'),
+    # url(r'^browse_histories/$', views.UserHistoryView.as_view(), name='history'),
+    url(r'^addresses/create/$', views.CreateAddressView.as_view(), name='createaddress'),
+    url(r'^addresses/$', views.AddressView.as_view(), name='address'),
+    url(r'^addresses/(?P<address_id>\d+)/$', views.UpdateDestroyAddressView.as_view(), name='addressesupdate'),
 ]

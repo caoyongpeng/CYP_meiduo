@@ -192,3 +192,4 @@ class OrderSuccessView(View):
             'pay_method': pay_method
         }
         return render(request,'order_success.html',context=context)
+
