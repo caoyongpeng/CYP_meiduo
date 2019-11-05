@@ -287,11 +287,16 @@ CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
 
 
 REST_FRAMEWORK = {
+    #认证配置
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    # 权限配置
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser',
+    )
 }
 
 JWT_AUTH = {
