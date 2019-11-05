@@ -4,7 +4,7 @@ from django.http import HttpResponse,HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import JsonResponse
 from django.shortcuts import render
-
+from utils.pwd import s
 # Create your views here.
 
 from django.views import View
@@ -74,7 +74,7 @@ class PwdCodeView(View):
         except:
             return JsonResponse({},status=404)
 
-        json_str = json.dumps({"user_id":user.id,"mobile":user.mobile})
+        json_str = s.dumps({"user_id":user.id,"mobile":user.mobile}).decode()
 
         return JsonResponse({'mobile': user.mobile, 'access_token': json_str})
 
@@ -82,7 +82,7 @@ class PwdSMSCodeView(View):
     def get(self,request):
         access_token = request.GET.get('access_token')
 
-        user_dict = json.loads(access_token)
+        user_dict = s.loads(access_token)
 
         if user_dict is None:
             return JsonResponse({},status=400)
@@ -131,7 +131,7 @@ class PwdCheckCodeView(View):
 
         if redis_sms_code.decode().lower() != sms_code:
             return HttpResponseForbidden('验证码错误')
-        json_str = json.dumps({"user_id": user.id, 'mobile': user.mobile})
+        json_str = s.dumps({"user_id": user.id, 'mobile': user.mobile}).decode()
         return JsonResponse({'user_id': user.id, 'access_token': json_str})
 
 

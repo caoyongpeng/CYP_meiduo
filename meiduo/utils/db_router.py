@@ -3,7 +3,7 @@ class MasterSlaveDBRouter(object):
 
     def db_for_read(self, model, **hints):
         """读"""
-        return "default"
+        return "slave"
 
     def db_for_write(self, model, **hints):
         """写"""

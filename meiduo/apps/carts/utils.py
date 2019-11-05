@@ -40,11 +40,11 @@ def merge_cart_cookie_to_redis(request, user, response):
             else:
 
                 remove_selected_ids.append(sku_id)
-        redis_conn.hmset('carts_%s'%user.id,cookie_dict)
+        # redis_conn.hset('carts_%s'%user.id,cookie_dict)
 
-        # redis_conn = get_redis_connection('carts')
-        #
-        # redis_conn.hmset('carts_%s' % user.id, cookie_dict)
+        redis_conn = get_redis_connection('carts')
+
+        redis_conn.hmset('carts_%s' % user.id, cookie_dict)
 
         if len(selected_ids) > 0:
             redis_conn.sadd('selected_%s' % user.id, *selected_ids)
