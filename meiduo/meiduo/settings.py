@@ -277,7 +277,7 @@ ALIPAY_PUBLIC_KEY_PATH = os.path.join(BASE_DIR, 'apps/payment/keys/alipay_public
 # CORS
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:8080',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
     'localhost:8080',
     'www.meiduo.site:8080',
     'api.meiduo.site:8000',
