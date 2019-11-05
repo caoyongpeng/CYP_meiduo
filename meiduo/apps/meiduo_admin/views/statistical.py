@@ -24,3 +24,15 @@ class UserDayCountView(APIView):
         return Response({
             'count':count
         })
+
+class UserOrderCountView(APIView):
+    def get(self,request):
+
+        now_date = date.today()
+        users = set(User.objects.filter(is_staff=False,orderinfo__create_time__gte=now_date))
+
+        count = len(users)
+
+        return Response({
+            'count':count
+        })
