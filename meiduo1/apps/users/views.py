@@ -69,7 +69,7 @@ class LoginView(View):
 
         if not all([username,password]):
             return HttpResponseBadRequest('参数不全')
-        user = authenticate(username=username,password=password)
+        user = authenticate(request,username=username,password=password)
 
         if user is None:
             return HttpResponseBadRequest('用户名或密码错误')
