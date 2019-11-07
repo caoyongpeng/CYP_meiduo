@@ -19,6 +19,8 @@ urlpatterns = [
     url(r'^goods/simple/$',spec.SpecView.as_view({'get':'simple'})),
     url(r'^goods/specs/simple/$',options.OptionView.as_view({'get':'simple'})),
     url(r'^skus/simple/$',images.ImageView.as_view({'get':'simple'})),
+    url(r'^skus/categories/$',skus.SKUsView.as_view({'get':'simple'})),
+
 
 
 ]

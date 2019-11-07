@@ -7,4 +7,4 @@ class MyStorage(Storage):
     def _save(self,name, content, max_length=None):
         pass
     def url(self, name):
-        return "http://192.168.36.54:8888/" + name
+        return "http://192.168.36.34:8888/" + name
