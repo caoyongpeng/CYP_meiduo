@@ -2,8 +2,10 @@
 from django.conf.urls import url
 from django.contrib import admin
 from rest_framework_jwt.views import obtain_jwt_token
-from .views import statistical
+from .views import statistical,users
 from . import views
+from rest_framework.routers import DefaultRouter
+from apps.meiduo_admin.views import spec
 
 urlpatterns = [
     url(r'^authorizations/$', obtain_jwt_token),
@@ -13,6 +15,11 @@ urlpatterns = [
     url(r'^statistical/month_increment/$',statistical.UserMouthCountView.as_view() ),
     url(r'^statistical/day_active/$',statistical.UserCountView.as_view() ),
     url(r'^statistical/goods_day_views/$',statistical.UserGoodsDayView.as_view() ),
+    url(r'^users/$',users.UsersView.as_view() ),
 
 
 ]
+router = DefaultRouter()
+
+router.register('goods/specs',spec.SpecView,base_name='spec')
+urlpatterns += router.urls

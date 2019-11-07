@@ -5,6 +5,7 @@ from apps.users.models import User
 from rest_framework.response import Response
 from apps.goods.models import GoodsVisitCount
 from apps.meiduo_admin.GoodsModelSerializer import GoodsSerializer
+from rest_framework.generics import ListAPIView
 class UserTotalCountView(APIView):
     def get(self,request):
 
@@ -72,13 +73,8 @@ class UserMouthCountView(APIView):
                 'date':index_date
             })
         return Response(date_list)
-class UserGoodsDayView(APIView):
-    def get(self,request):
+class UserGoodsDayView(ListAPIView):
 
-        now_date = date.today()
+    serializer_class = GoodsSerializer
 
-        data = GoodsVisitCount.objects.filter(date=now_date)
-
-        ser = GoodsSerializer(data,many=True)
-
-        return Response(ser.data)
+    queryset = GoodsVisitCount.objects.filter(date=date.today())
