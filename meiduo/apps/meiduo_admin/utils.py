@@ -14,7 +14,7 @@ class PageNum(PageNumberPagination):
 
     page_size_query_param = 'pagesize'
 
-    max_page_size = 2
+    max_page_size = 8
 
     def get_paginated_response(self,data):
 
