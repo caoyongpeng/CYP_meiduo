@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from apps.meiduo_admin.utils import PageNum
-from apps.goods.models import SKU
-from apps.meiduo_admin.serializer.SKUs import SKUSgoodsSerializer,CategorySerializer
+from apps.goods.models import SKU, SPU
+from apps.meiduo_admin.serializer.SKUs import SKUSgoodsSerializer,CategorySerializer,SPUSpecSerializer
 from apps.goods.models import GoodsCategory
 
 
@@ -27,8 +27,16 @@ class SKUsView(ModelViewSet):
 
     def simple(self,request):
 
-        data = GoodsCategory.objects.filter(parent_id__gt=37)
+        data = GoodsCategory.objects.filter(subs=None)
 
         ser = CategorySerializer(data,many=True)
 
         return Response(ser.data)
+
+    def specs(self,request,pk):
+
+        spu = SPU.objects.get(id=pk)
+        specs = spu.specs.all()
+        ser = SPUSpecSerializer(specs,many=True)
+        return Response(ser.data)
+
