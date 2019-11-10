@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.goods.models import SKUSpecification, SKU, GoodsCategory, SPUSpecification, SpecificationOption
-
+from django.db import transaction
 
 class SKUSpecSerializer(serializers.ModelSerializer):
     spec_id = serializers.IntegerField()
@@ -29,18 +29,35 @@ class SKUSgoodsSerializer(serializers.ModelSerializer):
         specs = validated_data.get('specs')
 
         del validated_data['specs']
-        sku = super().create(validated_data)
-        for spec in specs:
-            SKUSpecification.objects.create(sku=sku,spec_id=spec['spec_id'],option_id=spec['option_id'])
-        return sku
+        with transaction.atomic():
+            save_point = transaction.savepoint()
+            try:
+                sku = super().create(validated_data)
+                for spec in specs:
+                    SKUSpecification.objects.create(sku=sku,spec_id=spec['spec_id'],option_id=spec['option_id'])
+            except:
+                transaction.savepoint_rollback(save_point)
+                raise serializers.ValidationError('保存失败')
+            else:
+                transaction.savepoint_commit(save_point)
+                return sku
     def update(self, instance, validated_data):
         specs = validated_data.get('specs')
         del validated_data['specs']
-        sku = super().update(instance,validated_data)
+        with transaction.atomic():
+            save_point = transaction.savepoint()
+            try:
 
-        for spec in specs:
-            SKUSpecification.objects.create(sku=sku,spec_id=spec['spec_id'],option_id=spec['option_id'])
-        return sku
+                sku = super().update(instance,validated_data)
+
+                for spec in specs:
+                    SKUSpecification.objects.filter(sku=sku,spec_id=spec['spec_id']).update(option_id=spec['option_id'])
+            except:
+                transaction.savepoint_rollback(save_point)
+                raise serializers.ValidationError('更新失败')
+            else:
+                transaction.savepoint_commit(save_point)
+                return sku
 
 
 

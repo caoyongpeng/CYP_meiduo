@@ -5,7 +5,7 @@ from rest_framework_jwt.views import obtain_jwt_token
 from .views import statistical,users
 from . import views
 from rest_framework.routers import DefaultRouter
-from apps.meiduo_admin.views import spec,skus,options,images,spus
+from apps.meiduo_admin.views import spec,skus,options,images,spus,orders
 
 urlpatterns = [
     url(r'^authorizations/$', obtain_jwt_token),
@@ -23,6 +23,9 @@ urlpatterns = [
     url(r'^goods/(?P<pk>\d+)/specs/$',skus.SKUsView.as_view({'get':'specs'})),
     url(r'^goods/brands/simple/$',spus.SPUView.as_view({'get':'simple'})),
     url(r'^goods/channel/categories/$',spus.SPUView.as_view({'get':'channel'})),
+    url(r'^goods/channel/categories/(?P<pk>\d+)/$',spus.SPUView.as_view({'get':'channels'})),
+    url(r'^goods/images/$',spus.SPUView.as_view({'post':'images'})),
+    url(r'^orders/(?P<order_id>\d+)/status/$',orders.OrderView.as_view({'put':'status'}))
 
 
 ]
@@ -33,6 +36,7 @@ router.register('specs/options',options.OptionView,base_name='options')
 router.register('skus/images',images.ImageView,base_name='images')
 router.register('skus',skus.SKUsView,base_name='skus')
 router.register('goods',spus.SPUView,base_name='spus')
+router.register('orders',orders.OrderView,base_name='orders')
 urlpatterns += router.urls
 
 
