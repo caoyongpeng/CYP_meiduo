@@ -12,8 +12,8 @@ class PermissionSerializer(serializers.ModelSerializer):
 
 
 class ContentTypeSerializer(serializers.ModelSerializer):
-
+    name = serializers.CharField()
 
     class Meta:
         model = ContentType
-        fields = ('id','name')
+        fields = '__all__'
